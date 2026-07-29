@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - MediCare</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/script.js"></script>
+</head>
+<body>
+  <div class="container-fluid p-0">
+    <!-- Enhanced Header -->
+    <header>
+      <div class="container-fluid">
+        <div class="row align-items-center">
+          <div class="col">
+            <h1 class="h3 fw-bold mb-0">My Orders</h1>
+          </div>
+          <div class="col-auto">
+            <div class="user-icon" onclick="toggleDropdown()">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="dropdown" id="userDropdown">
+              <p class="mb-2 fw-semibold"><%= user.username %></p>
+              <a href="/check-availability" class="btn btn-sm btn-outline-light w-100 mb-1">Check Availability</a>
+              <a href="/my-orders" class="btn btn-sm btn-outline-light w-100 mb-1">My Orders</a>
+              <a href="/change-password" class="btn btn-sm btn-outline-light w-100 mb-1">Change Password</a>
+              <a href="/logout" class="btn btn-sm btn-outline-light w-100">Logout</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <div class="row">
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2 class="h4 fw-bold mb-0">Order History</h2>
+            </div>
+
+            <div class="table-container">
+              <% if (orders.length === 0) { %>
+                <div class="alert alert-info" role="alert">
+                  <i class="fas fa-info-circle me-2"></i>
+                  You haven't placed any orders yet. <a href="/check-availability">Browse available medicines</a>.
+                </div>
+              <% } else { %>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Medicine</th>
+                      <th>Dosage</th>
+                      <th>Quantity</th>
+                      <th>Unit Price</th>
+                      <th>Total Price</th>
+                      <th>Order Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% orders.forEach(o => { %>
+                      <tr>
+                        <td class="fw-semibold">#<%= o.id %></td>
+                        <td><%= o.name %></td>
+                        <td><%= o.dosage %></td>
+                        <td><%= o.quantity %></td>
+                        <td class="fw-bold text-primary">₹<%= o.unit_price %></td>
+                        <td class="fw-bold text-success">₹<%= o.total_price %></td>
+                        <td><%= new Date(o.order_date).toLocaleDateString() %></td>
+                        <td>
+                          <span class="status <%= o.status %>">
+                            <%= o.status.charAt(0).toUpperCase() + o.status.slice(1) %>
+                          </span>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p class="mb-0">&copy; 2025 MediCare. All rights reserved.</p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

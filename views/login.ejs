@@ -1,0 +1,487 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - MediCare</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      --secondary-gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      --surface: #ffffff;
+      --surface-elevated: #f8fafc;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .hero-section {
+      background: var(--secondary-gradient);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(79, 70, 229, 0.08) 0%, transparent 50%);
+      animation: backgroundShift 20s ease-in-out infinite;
+    }
+
+    @keyframes backgroundShift {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .app-logo {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.3rem;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+    }
+
+    .feature-list {
+      text-align: left;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary-gradient);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+
+    .login-card {
+      background: var(--surface);
+      border-radius: 24px;
+      box-shadow: var(--shadow-lg);
+      border: none;
+      overflow: hidden;
+      animation: cardSlideIn 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    @keyframes cardSlideIn {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .login-header {
+      background: var(--primary-gradient);
+      color: white;
+      padding: 40px 40px 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .login-header::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 40px;
+      background: var(--primary-gradient);
+      border-radius: 50%;
+    }
+
+    .login-body {
+      padding: 60px 40px 40px;
+    }
+
+    .form-floating {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-control {
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: var(--surface);
+    }
+
+    .form-control:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .form-label {
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-login {
+      background: var(--primary-gradient);
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent);
+      transition: left 0.6s;
+    }
+
+    .btn-login:hover::before {
+      left: 100%;
+    }
+
+    .btn-register {
+      border: 2px solid #6366f1;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #6366f1;
+      background: transparent;
+      transition: all 0.3s ease;
+    }
+
+    .btn-register:hover {
+      background: #6366f1;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .alert-danger {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .footer {
+      background: var(--secondary-gradient);
+      color: white;
+      text-align: center;
+      padding: 30px 20px;
+      margin-top: auto;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .hero-section {
+        min-height: auto;
+        padding: 40px 20px;
+      }
+
+      .app-logo {
+        font-size: 2.5rem;
+      }
+
+      .login-body {
+        padding: 40px 25px 25px;
+      }
+
+      .login-header {
+        padding: 30px 25px 15px;
+      }
+    }
+
+    /* Loading animation */
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Password toggle */
+    .password-toggle {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .password-toggle:hover {
+      color: #6366f1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid p-0">
+    <div class="row g-0">
+      <!-- Hero Section -->
+      <div class="col-lg-6 d-none d-lg-block">
+        <div class="hero-section">
+          <div class="hero-content">
+            <h1 class="app-logo">MediCare</h1>
+            <p class="hero-subtitle">Secure Medicine Management System</p>
+
+            <div class="feature-list">
+              <div class="feature-item">
+                <div class="feature-icon">
+                  <i class="fas fa-shield-alt text-white"></i>
+                </div>
+                <div>
+                  <h5 class="mb-1">Enterprise Security</h5>
+                  <p class="mb-0 small">Military-grade encryption for your data</p>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon">
+                  <i class="fas fa-pills text-white"></i>
+                </div>
+                <div>
+                  <h5 class="mb-1">Smart Inventory</h5>
+                  <p class="mb-0 small">AI-powered stock management</p>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon">
+                  <i class="fas fa-chart-line text-white"></i>
+                </div>
+                <div>
+                  <h5 class="mb-1">Real-time Analytics</h5>
+                  <p class="mb-0 small">Comprehensive reporting & insights</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login Section -->
+      <div class="col-lg-6">
+        <div class="login-container">
+          <div class="w-100" style="max-width: 450px;">
+            <!-- Mobile Logo -->
+            <div class="text-center mb-5 d-lg-none">
+              <h1 class="app-logo" style="font-size: 2.5rem;">MediCare</h1>
+              <p class="text-muted">Secure Medicine Management System</p>
+            </div>
+
+            <div class="login-card">
+              <div class="login-header">
+                <h2 class="h3 mb-2">Welcome Back</h2>
+                <p class="mb-0 opacity-75">Sign in to your account</p>
+              </div>
+
+              <div class="login-body">
+                <% if (error) { %>
+                  <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <%= error %>
+                  </div>
+                <% } %>
+
+                <form action="/login" method="POST" id="loginForm">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required>
+                    <label for="username"><i class="fas fa-user me-2"></i>Username</label>
+                  </div>
+
+                  <div class="form-floating position-relative">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                    <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                    <button type="button" class="password-toggle" id="passwordToggle">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="rememberMe">
+                      <label class="form-check-label small" for="rememberMe">
+                        Remember me
+                      </label>
+                    </div>
+                    <a href="/forgot-password" class="small text-decoration-none">Forgot password?</a>
+                  </div>
+
+                  <button type="submit" class="btn btn-login w-100 mb-3" id="loginBtn">
+                    <span class="login-text">Sign In</span>
+                    <span class="loading-text" style="display: none;">
+                      <span class="loading-spinner"></span>Signing in...
+                    </span>
+                  </button>
+
+                  <div class="text-center">
+                    <p class="text-muted mb-3">Don't have an account?</p>
+                    <a href="/register" class="btn btn-register w-100">
+                      <i class="fas fa-user-plus me-2"></i>Create New Account
+                    </a>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="text-center mt-4">
+              <p class="small text-muted">
+                <i class="fas fa-shield-alt me-2"></i>
+                Your data is protected with 256-bit SSL encryption
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer d-lg-none">
+    <div class="container">
+      <p class="mb-0">&copy; 2025 MediCare. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Password toggle functionality
+    document.getElementById('passwordToggle').addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      const icon = this.querySelector('i');
+
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+
+    // Form submission loading state
+    document.getElementById('loginForm').addEventListener('submit', function() {
+      const loginBtn = document.getElementById('loginBtn');
+      const loginText = loginBtn.querySelector('.login-text');
+      const loadingText = loginBtn.querySelector('.loading-text');
+
+      loginText.style.display = 'none';
+      loadingText.style.display = 'inline';
+      loginBtn.disabled = true;
+    });
+
+    // Add floating label functionality
+    document.querySelectorAll('.form-control').forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.classList.add('focused');
+      });
+
+      input.addEventListener('blur', function() {
+        if (!this.value) {
+          this.parentElement.classList.remove('focused');
+        }
+      });
+
+      // Initialize on page load
+      if (input.value) {
+        input.parentElement.classList.add('focused');
+      }
+    });
+  </script>
+</body>
+</html>
