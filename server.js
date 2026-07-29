@@ -1,4 +1,5 @@
-﻿const express = require('express');
+require('dotenv').config();
+const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const path = require('path');
@@ -6,77 +7,94 @@ const path = require('path');
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 let currentUser = null;
 
-const pool = mysql.createPool({
+const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '123456789',
   database: process.env.DB_NAME || 'medicine_db',
+  port: parseInt(process.env.DB_PORT || '3306'),
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
-});
+};
 
-(async () => {
-  const conn = await pool.getConnection();
+if (process.env.DB_SSL === 'true' || (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' && process.env.DB_HOST !== '127.0.0.1')) {
+  dbConfig.ssl = { rejectUnauthorized: false };
+}
+
+const pool = mysql.createPool(dbConfig);
+
+let dbInitialized = false;
+
+async function initDB() {
+  if (dbInitialized) return;
   try {
-    await conn.query(`DROP DATABASE IF EXISTS medicine_db`);
-    await conn.query(`CREATE DATABASE IF NOT EXISTS medicine_db`);
-    await conn.query(`USE medicine_db`);
+    const conn = await pool.getConnection();
+    try {
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          username VARCHAR(50) UNIQUE NOT NULL,
+          password VARCHAR(255) NOT NULL,
+          role ENUM('admin', 'user') DEFAULT 'user',
+          status ENUM('pending', 'approved') DEFAULT 'pending'
+        )
+      `);
 
-    await conn.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        role ENUM('admin', 'user') DEFAULT 'user',
-        status ENUM('pending', 'approved') DEFAULT 'pending'
-      )
-    `);
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS medicines (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          dosage VARCHAR(100) NOT NULL,
+          price DECIMAL(10,2) NOT NULL,
+          expiry_date DATE NOT NULL
+        )
+      `);
 
-    await conn.query(`
-      CREATE TABLE IF NOT EXISTS medicines (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        dosage VARCHAR(100) NOT NULL,
-        price DECIMAL(10,2) NOT NULL,
-        expiry_date DATE NOT NULL
-      )
-    `);
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS orders (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT NOT NULL,
+          medicine_id INT NOT NULL,
+          quantity INT NOT NULL DEFAULT 1,
+          total_price DECIMAL(10,2) NOT NULL,
+          order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          status ENUM('pending', 'confirmed', 'delivered') DEFAULT 'pending',
+          FOREIGN KEY (user_id) REFERENCES users(id),
+          FOREIGN KEY (medicine_id) REFERENCES medicines(id)
+        )
+      `);
 
-    await conn.query(`
-      CREATE TABLE IF NOT EXISTS orders (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        medicine_id INT NOT NULL,
-        quantity INT NOT NULL DEFAULT 1,
-        total_price DECIMAL(10,2) NOT NULL,
-        order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        status ENUM('pending', 'confirmed', 'delivered') DEFAULT 'pending',
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (medicine_id) REFERENCES medicines(id)
-      )
-    `);
+      const [admin] = await conn.query("SELECT * FROM users WHERE username = 'admin'");
+      if (admin.length === 0) {
+        const hash = await bcrypt.hash('admin123', 10);
+        await conn.query("INSERT INTO users (username, password, role, status) VALUES (?, ?, 'admin', 'approved')", ['admin', hash]);
+        console.log("Admin account created: admin / admin123");
+      }
 
-    const [admin] = await conn.query("SELECT * FROM users WHERE username = 'admin'");
-    if (admin.length === 0) {
-      const hash = await bcrypt.hash('admin123', 10);
-      await conn.query("INSERT INTO users (username, password, role, status) VALUES (?, ?, 'admin', 'approved')", ['admin', hash]);
-      console.log("Admin: admin / admin123");
+      dbInitialized = true;
+      console.log("DB setup verified");
+    } finally {
+      conn.release();
     }
-
-    console.log("DB ready with user approval");
   } catch (err) {
-    console.error("DB Error:", err.message);
-  } finally {
-    conn.release();
+    console.error("DB Initialization Error:", err.message);
   }
-})();
+}
+
+app.use(async (req, res, next) => {
+  if (!dbInitialized) {
+    await initDB();
+  }
+  next();
+});
 
 const getUser = async (username) => {
   const [rows] = await pool.execute('SELECT * FROM users WHERE username = ?', [username]);
@@ -101,25 +119,35 @@ app.get('/', (req, res) => res.render('login', { error: null }));
 app.get('/register', (req, res) => res.render('register', { error: null }));
 
 app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.render('register', { error: 'Fill all fields' });
-  if (await getUser(username)) return res.render('register', { error: 'Username taken' });
-  const hash = await bcrypt.hash(password, 10);
-  await pool.execute('INSERT INTO users (username, password, role, status) VALUES (?, ?, "user", "pending")', [username, hash]);
-  res.redirect('/');
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.render('register', { error: 'Fill all fields' });
+    if (await getUser(username)) return res.render('register', { error: 'Username taken' });
+    const hash = await bcrypt.hash(password, 10);
+    await pool.execute('INSERT INTO users (username, password, role, status) VALUES (?, ?, "user", "pending")', [username, hash]);
+    res.redirect('/');
+  } catch (err) {
+    console.error("Register error:", err);
+    res.render('register', { error: 'Database connection failed. Please verify environment variables on Vercel.' });
+  }
 });
 
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = await getUser(username);
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.render('login', { error: 'Invalid username or password' });
+  try {
+    const { username, password } = req.body;
+    const user = await getUser(username);
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.render('login', { error: 'Invalid username or password' });
+    }
+    if (user.status !== 'approved') {
+      return res.render('login', { error: 'Account pending approval by admin' });
+    }
+    currentUser = { id: user.id, username: user.username, role: user.role };
+    res.redirect(user.role === 'admin' ? '/admin/dashboard' : '/check-availability');
+  } catch (err) {
+    console.error("Login error:", err);
+    res.render('login', { error: 'Database connection error. Ensure database host and credentials are set in Vercel environment variables.' });
   }
-  if (user.status !== 'approved') {
-    return res.render('login', { error: 'Account pending approval by admin' });
-  }
-  currentUser = { id: user.id, username: user.username, role: user.role };
-  res.redirect(user.role === 'admin' ? '/admin/dashboard' : '/check-availability');
 });
 
 // ADMIN
@@ -464,8 +492,19 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-const PORT = 8000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server: http://localhost:${PORT}`);
-  console.log(`Network: http://0.0.0.0:${PORT}`);
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("Unhandled Application Error:", err);
+  res.status(500).render('login', { 
+    error: 'An internal server error occurred. If deployed on Vercel, make sure environment variables (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME) are set in your Vercel project settings.' 
+  });
 });
+
+if (require.main === module) {
+  const PORT = process.env.PORT || 8000;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server: http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
